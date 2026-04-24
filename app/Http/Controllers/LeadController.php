@@ -31,8 +31,8 @@ class LeadController extends Controller
 
         $keyword = $request->keyword;
         $locationName = $request->location_name;
-        $radius = (float)$request->radius;
-        $maxResults = (int)($request->max_results ?? 20);
+        $radius = (float) $request->radius;
+        $maxResults = (int) ($request->max_results ?? 20);
 
         $user = Auth::user();
 
@@ -54,7 +54,7 @@ class LeadController extends Controller
             ->toArray();
 
         if ($existingLeads->count() >= $maxResults) {
-            $leads = $existingLeads->take($maxResults)->map(function($lead) use ($userSavedLeadIds) {
+            $leads = $existingLeads->take($maxResults)->map(function ($lead) use ($userSavedLeadIds) {
                 $lead->is_saved = in_array($lead->id, $userSavedLeadIds);
                 return $lead;
             });
@@ -80,10 +80,10 @@ class LeadController extends Controller
             $geoResponse = Http::withHeaders([
                 'User-Agent' => 'WAMaps_Laravel_Dashboard/1.0'
             ])->timeout(10)->get('https://nominatim.openstreetmap.org/search', [
-                'q' => $locationName,
-                'format' => 'json',
-                'limit' => 1
-            ]);
+                        'q' => $locationName,
+                        'format' => 'json',
+                        'limit' => 1
+                    ]);
 
             if (!$geoResponse->successful() || empty($geoResponse->json())) {
                 return response()->json(['error' => 'Lokasi tidak ditemukan. Pastikan nama kota/daerah benar.'], 400);
@@ -97,16 +97,16 @@ class LeadController extends Controller
         }
 
         // SearchAPI.io call preparation
-        $startPage = (int)(floor($existingLeads->count() / 20) + 1);
+        $startPage = (int) (floor($existingLeads->count() / 20) + 1);
         $gap = $maxResults - $existingLeads->count();
-        
+
         $searchApiUrl = "https://www.searchapi.io/api/v1/search";
-        $radiusMeters = (int)($radius * 1000);
+        $radiusMeters = (int) ($radius * 1000);
         $llParam = "@{$lat},{$lng},{$radiusMeters}m";
 
         $allNewPlaces = [];
         $currentPage = $startPage;
-        
+
         // Fetch missing pages from API
         while (count($allNewPlaces) < $gap) {
             try {
@@ -118,20 +118,25 @@ class LeadController extends Controller
                     'page' => $currentPage
                 ]);
 
-                if (!$apiResponse->successful()) break;
+                if (!$apiResponse->successful())
+                    break;
 
                 $data = $apiResponse->json();
                 $localResults = $data['local_results'] ?? [];
-                if (empty($localResults)) break;
+                if (empty($localResults))
+                    break;
 
                 foreach ($localResults as $place) {
                     $allNewPlaces[] = $place;
-                    if (count($allNewPlaces) >= $gap) break;
+                    if (count($allNewPlaces) >= $gap)
+                        break;
                 }
 
-                if (count($localResults) < 20) break;
+                if (count($localResults) < 20)
+                    break;
                 $currentPage++;
-                if ($currentPage > $startPage + 5) break; // Safety cap
+                if ($currentPage > $startPage + 5)
+                    break; // Safety cap
             } catch (\Exception $e) {
                 break;
             }
@@ -153,11 +158,12 @@ class LeadController extends Controller
 
         foreach ($allNewPlaces as $place) {
             $googlePlaceId = $place['data_id'] ?? $place['place_id'] ?? null;
-            if (!$googlePlaceId) continue;
+            if (!$googlePlaceId)
+                continue;
 
             // Check if Lead already exists in the leads table
             $lead = DB::table('leads')->where('google_place_id', $googlePlaceId)->first();
-            
+
             if (!$lead) {
                 $leadId = DB::table('leads')->insertGetId([
                     'google_place_id' => $googlePlaceId,
@@ -176,7 +182,7 @@ class LeadController extends Controller
                 'search_id' => $searchId,
                 'lead_id' => $lead->id
             ]);
-            
+
             if (!in_array($googlePlaceId, $seenPlaceIds)) {
                 $finalLeadsList[] = $lead;
                 $seenPlaceIds[] = $googlePlaceId;
@@ -192,7 +198,7 @@ class LeadController extends Controller
         }
 
         // Add is_saved status to each lead for the UI
-        $finalLeadsList = collect($finalLeadsList)->map(function($lead) use ($userSavedLeadIds) {
+        $finalLeadsList = collect($finalLeadsList)->map(function ($lead) use ($userSavedLeadIds) {
             $lead->is_saved = in_array($lead->id, $userSavedLeadIds);
             return $lead;
         });
@@ -206,12 +212,59 @@ class LeadController extends Controller
     }
 
     /**
-     * Display a paginated list of all leads.
+     * Display the database leads page or return JSON for AJAX requests using Yajra DataTables.
      */
-    public function data()
+    public function data(Request $request)
     {
-        $leads = DB::table('leads')->orderBy('id', 'desc')->paginate(15);
-        return view('leads.data', compact('leads'));
+        if ($request->ajax()) {
+            $leads = DB::table('leads');
+
+            return \Yajra\DataTables\Facades\DataTables::of($leads)
+                ->addIndexColumn()
+                ->addColumn('name_html', function ($row) {
+                    return '<span class="business-name">' . e($row->name) . '</span>';
+                })
+                ->addColumn('address_html', function ($row) {
+                    return '<span class="text-wrap-custom d-inline-block" title="' . e($row->address) . '">' . e($row->address) . '</span>';
+                })
+                ->addColumn('contact_html', function ($row) {
+                    $phoneHtml = $row->phone ? '
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                            <i class="bx bx-phone bx-xs text-primary"></i>
+                            <span class="small">' . e($row->phone) . '</span>
+                        </div>' : '';
+
+                    $websiteHtml = $row->website ? '
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bx bx-globe bx-xs text-info"></i>
+                            <a href="' . e($row->website) . '" target="_blank" class="small text-info text-decoration-underline">Website</a>
+                        </div>' : '';
+
+                    if (!$phoneHtml && !$websiteHtml)
+                        return '<span class="text-muted small">-</span>';
+                    return '<div class="d-flex flex-column gap-1">' . $phoneHtml . $websiteHtml . '</div>';
+                })
+                ->addColumn('rating_html', function ($row) {
+                    return '<div class="rating-badge"><i class="bx bxs-star"></i> ' . ($row->rating ?? '0') . '</div>';
+                })
+                ->addColumn('category_html', function ($row) {
+                    return '<span class="badge bg-label-primary rounded-pill" style="font-size: 10px;">' . e($row->category ?? 'N/A') . '</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $query = urlencode($row->name . ' ' . $row->address);
+                    return '
+                        <div class="action-btns">
+                            <a href="https://www.google.com/maps/search/?api=1&query=' . $query . '" 
+                               target="_blank" class="btn btn-sm btn-icon btn-label-secondary">
+                                <i class="bx bx-link-external"></i>
+                            </a>
+                        </div>';
+                })
+                ->rawColumns(['name_html', 'address_html', 'contact_html', 'rating_html', 'category_html', 'action'])
+                ->make(true);
+        }
+
+        return view('leads.data');
     }
 
     /**
