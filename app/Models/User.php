@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password_hash',
+        'search_api_key',
+        'fonnte_token',
     ];
 
     /**

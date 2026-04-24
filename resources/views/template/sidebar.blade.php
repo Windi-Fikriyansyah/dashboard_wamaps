@@ -36,31 +36,31 @@
     <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Marketing</span>
     </li>
-    <li class="menu-item">
+    <li class="menu-item {{ request()->is('whatsapp*') ? 'active open' : '' }}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
-            <i class="menu-icon tf-icons bx bx-layout"></i>
-            <div data-i18n="Layouts">Whatsapp Broadcast</div>
+            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
+            <div data-i18n="Layouts">Whatsapp</div>
         </a>
 
         <ul class="menu-sub">
-            <li class="menu-item">
-                <a href="layouts-without-menu.html" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('whatsapp.devices') ? 'active' : '' }}">
+                <a href="{{ route('whatsapp.devices') }}" class="menu-link">
                     <div data-i18n="Without menu">Devices</div>
                 </a>
             </li>
             <li class="menu-item">
-                <a href="layouts-without-navbar.html" class="menu-link">
+                <a href="javascript:void(0);" class="menu-link">
                     <div data-i18n="Without navbar">Template Pesan</div>
                 </a>
             </li>
             <li class="menu-item">
-                <a href="layouts-without-navbar.html" class="menu-link">
+                <a href="javascript:void(0);" class="menu-link">
                     <div data-i18n="Without navbar">Broadcast</div>
                 </a>
             </li>
 
             <li class="menu-item">
-                <a href="layouts-without-navbar.html" class="menu-link">
+                <a href="javascript:void(0);" class="menu-link">
                     <div data-i18n="Without navbar">History Pesan</div>
                 </a>
             </li>

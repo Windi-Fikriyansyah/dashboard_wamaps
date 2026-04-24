@@ -23,6 +23,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/data', [LeadController::class, 'data'])->name('leads.data');
     Route::post('/leads/save', [LeadController::class, 'save'])->name('leads.save');
     Route::post('/leads/save-batch', [LeadController::class, 'saveBatch'])->name('leads.save-batch');
+
+    // WhatsApp Device Routes
+    Route::get('/whatsapp/devices', [\App\Http\Controllers\WhatsAppController::class, 'index'])->name('whatsapp.devices');
+    Route::post('/whatsapp/devices', [\App\Http\Controllers\WhatsAppController::class, 'store'])->name('whatsapp.devices.store');
+    Route::delete('/whatsapp/devices/{id}', [\App\Http\Controllers\WhatsAppController::class, 'destroy'])->name('whatsapp.devices.destroy');
+    Route::get('/whatsapp/devices/{id}/qr', [\App\Http\Controllers\WhatsAppController::class, 'getQr'])->name('whatsapp.devices.qr');
+    Route::post('/whatsapp/devices/{id}/reconnect', [\App\Http\Controllers\WhatsAppController::class, 'reconnect'])->name('whatsapp.devices.reconnect');
+    Route::post('/whatsapp/devices/{id}/disconnect', [\App\Http\Controllers\WhatsAppController::class, 'disconnect'])->name('whatsapp.devices.disconnect');
+    Route::post('/whatsapp/devices/{id}/status', [\App\Http\Controllers\WhatsAppController::class, 'status'])->name('whatsapp.devices.status');
 });
 
 
