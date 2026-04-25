@@ -23,6 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/data', [LeadController::class, 'data'])->name('leads.data');
     Route::post('/leads/save', [LeadController::class, 'save'])->name('leads.save');
     Route::post('/leads/save-batch', [LeadController::class, 'saveBatch'])->name('leads.save-batch');
+    Route::delete('/leads/{id}', [LeadController::class, 'destroy'])->name('leads.destroy');
+    Route::post('/leads/delete-batch', [LeadController::class, 'destroyBatch'])->name('leads.delete-batch');
 
     // WhatsApp Device Routes
     Route::get('/whatsapp/devices', [\App\Http\Controllers\WhatsAppController::class, 'index'])->name('whatsapp.devices');
@@ -39,6 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'show'])->name('whatsapp.templates.show');
     Route::put('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'update'])->name('whatsapp.templates.update');
     Route::delete('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'destroy'])->name('whatsapp.templates.destroy');
+
+    // WhatsApp Broadcast Routes
+    Route::get('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'index'])->name('whatsapp.broadcast');
+    Route::post('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'send'])->name('whatsapp.broadcast.send');
 });
 
 

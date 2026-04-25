@@ -221,6 +221,9 @@ class LeadController extends Controller
 
             return \Yajra\DataTables\Facades\DataTables::of($leads)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="form-check-input lead-checkbox" value="' . $row->id . '">';
+                })
                 ->addColumn('name_html', function ($row) {
                     return '<span class="business-name">' . e($row->name) . '</span>';
                 })
@@ -255,12 +258,15 @@ class LeadController extends Controller
                     return '
                         <div class="action-btns">
                             <a href="https://www.google.com/maps/search/?api=1&query=' . $query . '" 
-                               target="_blank" class="btn btn-sm btn-icon btn-label-secondary">
+                               target="_blank" class="btn btn-sm btn-icon btn-label-secondary" title="Buka di Maps">
                                 <i class="bx bx-link-external"></i>
                             </a>
+                            <button type="button" class="btn btn-sm btn-icon btn-label-danger" onclick="deleteLead(' . $row->id . ')" title="Hapus Lead">
+                                <i class="bx bx-trash"></i>
+                            </button>
                         </div>';
                 })
-                ->rawColumns(['name_html', 'address_html', 'contact_html', 'rating_html', 'category_html', 'action'])
+                ->rawColumns(['checkbox', 'name_html', 'address_html', 'contact_html', 'rating_html', 'category_html', 'action'])
                 ->make(true);
         }
 
@@ -354,5 +360,34 @@ class LeadController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => "$count new leads saved successfully"]);
+    }
+
+    /**
+     * Delete a lead from the database.
+     */
+    public function destroy($id)
+    {
+        $deleted = DB::table('leads')->where('id', $id)->delete();
+
+        if (!$deleted) {
+            return response()->json(['error' => 'Lead not found'], 404);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Lead deleted successfully']);
+    }
+
+    /**
+     * Delete multiple leads from the database.
+     */
+    public function destroyBatch(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+
+        $deleted = DB::table('leads')->whereIn('id', $request->ids)->delete();
+
+        return response()->json(['success' => true, 'message' => "$deleted leads deleted successfully"]);
     }
 }

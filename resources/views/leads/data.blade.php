@@ -67,6 +67,9 @@
         <h5 class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
             <span>Database Leads <span class="badge bg-label-primary ms-1" id="totalLeadsBadge">0</span></span>
             <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-danger d-none" id="btnDeleteSelected" onclick="deleteSelectedLeads()">
+                    <i class="bx bx-trash me-1"></i> Hapus Terpilih (<span id="selectedLeadsCount">0</span>)
+                </button>
                 <a href="{{ route('leads.index') }}" class="btn btn-sm btn-primary">
                     <i class="bx bx-plus me-1"></i> Tambah Data
                 </a>
@@ -83,6 +86,7 @@
                 <table class="table table-hover w-100" id="leadsTableContainer">
                     <thead>
                         <tr>
+                            <th style="width: 30px;"><input type="checkbox" class="form-check-input" id="selectAllLeads"></th>
                             <th>Business Name</th>
                             <th>Address</th>
                             <th>Contact</th>
@@ -116,7 +120,7 @@
                     "type": "GET"
                 },
                 "pageLength": 15,
-                "order": [[0, "desc"]],
+                "order": [[1, "desc"]],
                 "scrollX": true,
                 "autoWidth": false,
                 "language": {
@@ -129,6 +133,7 @@
                     }
                 },
                 "columns": [
+                    { "data": "checkbox", "name": "checkbox", "orderable": false, "searchable": false },
                     { "data": "name_html", "name": "name" },
                     { "data": "address_html", "name": "address" },
                     { "data": "contact_html", "name": "phone", "orderable": false, "searchable": false },
@@ -138,9 +143,92 @@
                 ],
                 "drawCallback": function(settings) {
                     $('#totalLeadsBadge').text(settings._iRecordsTotal);
+                    $('#selectAllLeads').prop('checked', false);
+                    updateBulkDeleteButton();
                 }
             });
+
+            // Select All logic
+            $('#selectAllLeads').on('change', function() {
+                $('.lead-checkbox').prop('checked', $(this).prop('checked'));
+                updateBulkDeleteButton();
+            });
+
+            // Individual checkbox logic
+            $(document).on('change', '.lead-checkbox', function() {
+                updateBulkDeleteButton();
+            });
         });
+
+        function updateBulkDeleteButton() {
+            const selectedCount = $('.lead-checkbox:checked').length;
+            if (selectedCount > 0) {
+                $('#btnDeleteSelected').removeClass('d-none');
+                $('#selectedLeadsCount').text(selectedCount);
+            } else {
+                $('#btnDeleteSelected').addClass('d-none');
+            }
+        }
+
+        /**
+         * Delete multiple leads
+         */
+        function deleteSelectedLeads() {
+            const selectedIds = $('.lead-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) return;
+
+            Swal.fire({
+                title: 'Hapus Terpilih?',
+                text: `Anda akan menghapus ${selectedIds.length} lead terpilih secara permanen.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3e1d',
+                confirmButtonText: 'Ya, Hapus Semua!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: 'btn btn-danger me-3',
+                    cancelButton: 'btn btn-label-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('leads.delete-batch') }}",
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            ids: selectedIds
+                        },
+                        success: function(response) {
+                            leadsTable.ajax.reload();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                }
+                            });
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.error || 'Gagal menghapus data.',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
 
         /**
          * Export current page leads to Excel
@@ -202,6 +290,59 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        /**
+         * Delete lead from database
+         */
+        function deleteLead(id) {
+            Swal.fire({
+                title: 'Hapus Lead?',
+                text: "Data lead ini akan dihapus permanen dari database.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3e1d',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: 'btn btn-danger me-3',
+                    cancelButton: 'btn btn-label-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/leads/${id}`,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            leadsTable.ajax.reload();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Terhapus!',
+                                text: 'Lead berhasil dihapus.',
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                }
+                            });
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.error || 'Gagal menghapus lead.',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         }
     </script>
 @endpush
