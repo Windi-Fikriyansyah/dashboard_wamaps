@@ -32,6 +32,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/whatsapp/devices/{id}/reconnect', [\App\Http\Controllers\WhatsAppController::class, 'reconnect'])->name('whatsapp.devices.reconnect');
     Route::post('/whatsapp/devices/{id}/disconnect', [\App\Http\Controllers\WhatsAppController::class, 'disconnect'])->name('whatsapp.devices.disconnect');
     Route::post('/whatsapp/devices/{id}/status', [\App\Http\Controllers\WhatsAppController::class, 'status'])->name('whatsapp.devices.status');
+
+    // WhatsApp Template Routes
+    Route::get('/whatsapp/templates', [\App\Http\Controllers\WhatsAppTemplateController::class, 'index'])->name('whatsapp.templates');
+    Route::post('/whatsapp/templates', [\App\Http\Controllers\WhatsAppTemplateController::class, 'store'])->name('whatsapp.templates.store');
+    Route::get('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'show'])->name('whatsapp.templates.show');
+    Route::put('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'update'])->name('whatsapp.templates.update');
+    Route::delete('/whatsapp/templates/{id}', [\App\Http\Controllers\WhatsAppTemplateController::class, 'destroy'])->name('whatsapp.templates.destroy');
 });
 
 
