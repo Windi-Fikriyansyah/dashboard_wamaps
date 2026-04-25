@@ -54,6 +54,11 @@ Route::middleware('auth')->group(function () {
     // Settings Routes
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+
+    // Extras Routes
+    Route::get('/bonus', [\App\Http\Controllers\ExtrasController::class, 'bonus'])->name('bonus');
+    Route::get('/extension', [\App\Http\Controllers\ExtrasController::class, 'extension'])->name('extension');
+    Route::get('/software', [\App\Http\Controllers\ExtrasController::class, 'software'])->name('software');
 });
 
 // WhatsApp Webhook (Outside Auth)

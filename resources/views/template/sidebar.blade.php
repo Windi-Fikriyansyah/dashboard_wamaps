@@ -72,23 +72,28 @@
         <span class="menu-header-text">Bonus</span>
     </li>
 
-    <li class="menu-item {{ request()->is('whatsapp*') ? 'active open' : '' }}">
-        <a href="" class="menu-link menu-toggle">
-            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
-            <div data-i18n="Layouts">Bonus</div>
+    <li class="menu-item {{ request()->is('bonus') || request()->is('extension') || request()->is('software') ? 'active open' : '' }}">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bx-gift"></i>
+            <div data-i18n="Extras">Extras & Bonus</div>
         </a>
-
-        <a href="" class="menu-link menu-toggle">
-            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
-            <div data-i18n="Layouts">Versi Extension</div>
-        </a>
-
-        <a href="" class="menu-link menu-toggle">
-            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
-            <div data-i18n="Layouts">Versi Software</div>
-        </a>
-
-
+        <ul class="menu-sub">
+            <li class="menu-item {{ request()->routeIs('bonus') ? 'active' : '' }}">
+                <a href="{{ route('bonus') }}" class="menu-link">
+                    <div data-i18n="Bonus">Bonus VIP</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('extension') ? 'active' : '' }}">
+                <a href="{{ route('extension') }}" class="menu-link">
+                    <div data-i18n="Extension">Versi Extension</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('software') ? 'active' : '' }}">
+                <a href="{{ route('software') }}" class="menu-link">
+                    <div data-i18n="Software">Versi Software</div>
+                </a>
+            </li>
+        </ul>
     </li>
 
 
