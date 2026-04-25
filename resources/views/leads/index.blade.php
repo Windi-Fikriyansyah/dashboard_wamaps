@@ -83,6 +83,22 @@
 
 @section('content')
     <div class="col-md-12">
+        @if (empty(Auth::user()->search_api_key) || empty(Auth::user()->fonnte_token))
+            <div class="alert alert-danger d-flex align-items-center mb-4 p-3 shadow-sm border-start border-danger border-4" role="alert">
+                <span class="badge badge-center rounded-pill bg-danger me-3 p-2" style="width: 40px; height: 40px;">
+                    <i class="bx bx-error fs-3"></i>
+                </span>
+                <div class="d-flex flex-column">
+                    <h6 class="alert-heading mb-1 fw-bold text-danger">Konfigurasi Belum Lengkap!</h6>
+                    <span class="small">
+                        Silakan isi <strong>SearchAPI.io Key</strong> dan <strong>Fonnte Token</strong> Anda di 
+                        <a href="{{ route('settings.index') }}" class="alert-link text-decoration-underline">Pengaturan Akun</a> 
+                        terlebih dahulu agar fitur pencarian dan pengiriman pesan dapat digunakan secara maksimal.
+                    </span>
+                </div>
+            </div>
+        @endif
+
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Search Leads (Google Maps)</h5>
