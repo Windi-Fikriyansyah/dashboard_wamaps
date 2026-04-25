@@ -25,6 +25,9 @@
         </a>
     </li>
 
+
+
+
     <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Marketing</span>
     </li>
@@ -46,7 +49,15 @@
     <li class="menu-item {{ request()->routeIs('whatsapp.broadcast') ? 'active' : '' }}">
         <a href="{{ route('whatsapp.broadcast') }}" class="menu-link">
             <i class="menu-icon tf-icons bx bx-send"></i>
-            <div data-i18n="Broadcast">Broadcast</div>
+            <div data-i18n="Broadcast">WA Broadcast</div>
+        </a>
+    </li>
+
+
+    <li class="menu-item">
+        <a href="" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-send"></i>
+            <div data-i18n="Data Leads">Email Broadcast (Incoming)</div>
         </a>
     </li>
 

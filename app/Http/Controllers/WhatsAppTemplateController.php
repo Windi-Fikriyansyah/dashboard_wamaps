@@ -38,7 +38,10 @@ class WhatsAppTemplateController extends Controller
             'created_at' => now(),
         ]);
 
-        $template = DB::table('message_templates')->where('id', $templateId)->first();
+        $template = DB::table('message_templates')
+            ->where('id', $templateId)
+            ->where('user_id', Auth::id())
+            ->first();
 
         return response()->json($template);
     }
@@ -61,7 +64,10 @@ class WhatsAppTemplateController extends Controller
                 'content' => $request->content,
             ]);
 
-        $template = DB::table('message_templates')->where('id', $id)->first();
+        $template = DB::table('message_templates')
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
 
         return response()->json($template);
     }

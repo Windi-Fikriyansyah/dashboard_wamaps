@@ -217,7 +217,10 @@ class LeadController extends Controller
     public function data(Request $request)
     {
         if ($request->ajax()) {
-            $leads = DB::table('leads');
+            $leads = DB::table('leads')
+                ->join('user_saved_leads', 'leads.id', '=', 'user_saved_leads.lead_id')
+                ->where('user_saved_leads.user_id', Auth::id())
+                ->select('leads.*', 'user_saved_leads.category as category');
 
             return \Yajra\DataTables\Facades\DataTables::of($leads)
                 ->addIndexColumn()
@@ -367,7 +370,10 @@ class LeadController extends Controller
      */
     public function destroy($id)
     {
-        $deleted = DB::table('leads')->where('id', $id)->delete();
+        $deleted = DB::table('user_saved_leads')
+            ->where('user_id', Auth::id())
+            ->where('lead_id', $id)
+            ->delete();
 
         if (!$deleted) {
             return response()->json(['error' => 'Lead not found'], 404);
@@ -386,7 +392,10 @@ class LeadController extends Controller
             'ids.*' => 'integer'
         ]);
 
-        $deleted = DB::table('leads')->whereIn('id', $request->ids)->delete();
+        $deleted = DB::table('user_saved_leads')
+            ->where('user_id', Auth::id())
+            ->whereIn('lead_id', $request->ids)
+            ->delete();
 
         return response()->json(['success' => true, 'message' => "$deleted leads deleted successfully"]);
     }
