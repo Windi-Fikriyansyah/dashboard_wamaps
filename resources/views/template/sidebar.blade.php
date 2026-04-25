@@ -59,24 +59,41 @@
                 </a>
             </li>
 
-            <li class="menu-item {{ request()->routeIs('whatsapp.history') ? 'active' : '' }}">
+            <!-- <li class="menu-item {{ request()->routeIs('whatsapp.history') ? 'active' : '' }}">
                 <a href="{{ route('whatsapp.history') }}" class="menu-link">
                     <div data-i18n="Without navbar">History Pesan</div>
                 </a>
-            </li>
+            </li> -->
 
         </ul>
     </li>
 
     <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Laporan</span>
+        <span class="menu-header-text">Bonus</span>
+    </li>
+
+    <li class="menu-item {{ request()->is('whatsapp*') ? 'active open' : '' }}">
+        <a href="" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
+            <div data-i18n="Layouts">Bonus</div>
+        </a>
+
+        <a href="" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
+            <div data-i18n="Layouts">Versi Extension</div>
+        </a>
+
+        <a href="" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bxl-whatsapp"></i>
+            <div data-i18n="Layouts">Versi Software</div>
+        </a>
+
+
     </li>
 
 
     <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Lainnya</span>
     </li>
-    <!-- Harga -->
-
 
 </ul>

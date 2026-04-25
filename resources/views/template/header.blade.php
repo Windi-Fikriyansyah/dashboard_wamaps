@@ -49,7 +49,7 @@
                     </li>
 
                     <li>
-                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                        <a class="dropdown-item" href="{{ route('settings.index') }}">
                             <i class="bx bx-cog me-2"></i>
                             <span class="align-middle">Pengaturan Akun</span>
                         </a>

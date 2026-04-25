@@ -50,6 +50,10 @@ Route::middleware('auth')->group(function () {
     // WhatsApp History Routes
     Route::get('/whatsapp/history', [\App\Http\Controllers\WhatsAppHistoryController::class, 'index'])->name('whatsapp.history');
     Route::post('/whatsapp/history/refresh', [\App\Http\Controllers\WhatsAppHistoryController::class, 'refresh'])->name('whatsapp.history.refresh');
+
+    // Settings Routes
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
 });
 
 // WhatsApp Webhook (Outside Auth)
