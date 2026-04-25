@@ -59,8 +59,8 @@
                 </a>
             </li>
 
-            <li class="menu-item">
-                <a href="javascript:void(0);" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('whatsapp.history') ? 'active' : '' }}">
+                <a href="{{ route('whatsapp.history') }}" class="menu-link">
                     <div data-i18n="Without navbar">History Pesan</div>
                 </a>
             </li>

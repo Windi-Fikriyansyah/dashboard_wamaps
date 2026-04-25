@@ -103,9 +103,9 @@ class WhatsAppController extends Controller
                 'Authorization' => $result['token']
             ])->asForm()->post($this->fonnteApiUrl . '/update-device', [
                 'name' => $request->name,
-                'webhook' => $backendUrl . '/api/whatsapp/webhook',
-                'webhookconnect' => $backendUrl . '/api/whatsapp/webhook-connect',
-                'webhookstatus' => $backendUrl . '/api/whatsapp/webhook',
+                'webhook' => $backendUrl . '/whatsapp/webhook',
+                'webhookconnect' => $backendUrl . '/whatsapp/webhook-connect',
+                'webhookstatus' => $backendUrl . '/whatsapp/webhook',
             ]);
 
             return response()->json($device);
@@ -203,8 +203,22 @@ class WhatsAppController extends Controller
 
             $result = $response->json();
             if ($result['status'] ?? false) {
-                $newStatus = ($result['device_status'] ?? '') == 'connect' ? 'connected' : 'disconnected';
+                $isConnect = ($result['device_status'] ?? '') == 'connect';
+                $newStatus = $isConnect ? 'connected' : 'disconnected';
                 DB::table('whatsapp_devices')->where('id', $id)->update(['status' => $newStatus]);
+
+                // Auto-update webhook while checking status to ensure it's always correct
+                if ($isConnect) {
+                    $backendUrl = url('/');
+                    Http::withHeaders([
+                        'Authorization' => $device->token
+                    ])->asForm()->post($this->fonnteApiUrl . '/update-device', [
+                        'name' => $device->name,
+                        'webhook' => $backendUrl . '/whatsapp/webhook',
+                        'webhookconnect' => $backendUrl . '/whatsapp/webhook-connect',
+                        'webhookstatus' => $backendUrl . '/whatsapp/webhook',
+                    ]);
+                }
             }
 
             return $result;

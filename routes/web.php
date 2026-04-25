@@ -46,7 +46,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'index'])->name('whatsapp.broadcast');
     Route::post('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'send'])->name('whatsapp.broadcast.send');
     Route::post('/whatsapp/broadcast/stop', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'stop'])->name('whatsapp.broadcast.stop');
+
+    // WhatsApp History Routes
+    Route::get('/whatsapp/history', [\App\Http\Controllers\WhatsAppHistoryController::class, 'index'])->name('whatsapp.history');
+    Route::post('/whatsapp/history/refresh', [\App\Http\Controllers\WhatsAppHistoryController::class, 'refresh'])->name('whatsapp.history.refresh');
 });
+
+// WhatsApp Webhook (Outside Auth)
+Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppHistoryController::class, 'webhook'])->name('whatsapp.webhook');
 
 
 require __DIR__ . '/auth.php';
