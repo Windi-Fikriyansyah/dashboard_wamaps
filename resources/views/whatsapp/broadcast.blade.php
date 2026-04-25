@@ -154,9 +154,14 @@
                             </div>
                         </div>
 
-                        <button type="submit" id="btnSend" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 15px;" disabled>
-                            <i class="bx bx-send me-1"></i> Kirim ke <span id="btnSelectedCount">0</span> Lead
-                        </button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="btnSend" class="btn btn-primary w-100 py-3 fw-bold shadow-sm {{ $isRunning ? 'd-none' : '' }}" style="border-radius: 15px;" disabled>
+                                <i class="bx bx-send me-1"></i> Kirim ke <span id="btnSelectedCount">0</span> Lead
+                            </button>
+                            <button type="button" id="btnStop" class="btn btn-label-danger w-100 py-3 fw-bold shadow-sm {{ $isRunning ? '' : 'd-none' }}" style="border-radius: 15px;" onclick="stopBroadcast()">
+                                <i class="bx bx-stop-circle me-1"></i> Berhentikan Pengiriman
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -282,9 +287,10 @@
                     title: 'Broadcast Dimulai!',
                     text: response.message,
                     confirmButtonText: 'Oke'
-                }).then(() => {
-                    window.location.reload();
                 });
+                // Show Stop button, hide Send button
+                $('#btnSend').addClass('d-none');
+                $('#btnStop').removeClass('d-none');
             },
             error: function(xhr) {
                 btn.prop('disabled', false).html(originalHtml);
@@ -292,6 +298,29 @@
             }
         });
     });
+
+    function stopBroadcast() {
+        Swal.fire({
+            title: 'Hentikan Pengiriman?',
+            text: "Sinyal berhenti akan dikirim ke sistem background.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3e1d',
+            confirmButtonText: 'Ya, Berhenti!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const btn = $('#btnStop');
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menghentikan...');
+                
+                $.post("{{ route('whatsapp.broadcast.stop') }}", { _token: "{{ csrf_token() }}" }, function(response) {
+                    Swal.fire('Berhasil', response.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                });
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

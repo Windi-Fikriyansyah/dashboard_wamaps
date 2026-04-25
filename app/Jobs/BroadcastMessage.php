@@ -15,6 +15,20 @@ class BroadcastMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * The number of times the job may be attempted.
+     *
+     * @var int
+     */
+    public $tries = 1;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     *
+     * @var int
+     */
+    public $timeout = 0; // Unlimited
+
     protected $leadIds;
     protected $messageContent;
     protected $deviceToken;
@@ -41,9 +55,17 @@ class BroadcastMessage implements ShouldQueue
     private function normalizePhone($phone)
     {
         $cleaned = preg_replace('/[^0-9]/', '', $phone);
-        if (str_starts_with($cleaned, '08')) {
-            return '628' . substr($cleaned, 2);
+        
+        // If starts with 0, replace with 62 (handles 08... and 021... etc)
+        if (str_starts_with($cleaned, '0')) {
+            return '62' . substr($cleaned, 1);
         }
+        
+        // If starts with 8, add 62
+        if (str_starts_with($cleaned, '8')) {
+            return '62' . $cleaned;
+        }
+        
         return $cleaned;
     }
 
@@ -52,108 +74,130 @@ class BroadcastMessage implements ShouldQueue
      */
     public function handle(): void
     {
-        $leads = DB::table('leads')->whereIn('id', $this->leadIds)->get();
-        if ($leads->isEmpty()) {
-            return;
-        }
+        \Illuminate\Support\Facades\Cache::put('broadcast_running_' . $this->userId, true, now()->addHours(2));
+        Log::info("Broadcast started for User ID: " . $this->userId . " with " . count($this->leadIds) . " leads.");
 
-        // 1. Number Validation Step
-        $registeredNumbers = [];
-        $allNormalizedNumbers = [];
-        foreach ($leads as $lead) {
-            if ($lead->phone) {
-                $normalized = $this->normalizePhone($lead->phone);
-                if ($normalized) {
-                    $allNormalizedNumbers[$normalized] = $lead->id;
-                }
-            }
-        }
-
-        $phoneList = array_keys($allNormalizedNumbers);
-        $chunks = array_chunk($phoneList, 500);
-
-        foreach ($chunks as $batch) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => $this->deviceToken
-                ])->asForm()->post('https://api.fonnte.com/validate', [
-                    'target' => implode(',', $batch),
-                    'countryCode' => '0'
-                ]);
-
-                $valResult = $response->json();
-                if ($valResult['status'] ?? false) {
-                    $registeredNumbers = array_merge($registeredNumbers, $valResult['registered'] ?? []);
-                }
-            } catch (\Exception $e) {
-                Log::error("Broadcast Validation Error: " . $e->getMessage());
-            }
-        }
-
-        $sentCount = 0;
-        $batchLimit = 20;
-
-        foreach ($leads as $lead) {
-            if (!$lead->phone) continue;
-
-            $phone = $this->normalizePhone($lead->phone);
-            if (!$phone || !in_array($phone, $registeredNumbers)) {
-                continue;
+        try {
+            $leads = DB::table('leads')->whereIn('id', $this->leadIds)->get();
+            if ($leads->isEmpty()) {
+                Log::warning("Broadcast aborted: No leads found in database for the provided IDs.");
+                return;
             }
 
-            // 2. Random Delay Logic
-            if ($sentCount > 0) {
-                // Batch rest: after every 20 messages
-                if ($sentCount % $batchLimit == 0) {
-                    sleep(900); // 15 minutes rest
+            // 1. Number Validation Step
+            $registeredNumbers = [];
+            $allNormalizedNumbers = [];
+            foreach ($leads as $lead) {
+                if ($lead->phone) {
+                    $normalized = $this->normalizePhone($lead->phone);
+                    if ($normalized) {
+                        $allNormalizedNumbers[$normalized] = $lead->id;
+                    }
                 } else {
-                    $sleepTime = rand($this->delayMin, $this->delayMax);
-                    sleep($sleepTime);
+                    Log::info("Lead skipped: " . ($lead->name ?? 'Unknown') . " has no phone number.");
                 }
             }
 
-            // 3. Personalize Message
-            $personalizedMessage = $this->messageContent;
-            $placeholders = [
-                '{{name}}' => $lead->name ?? '',
-                '{{address}}' => $lead->address ?? '',
-                '{{phone}}' => $lead->phone ?? '',
-                '{{category}}' => $lead->category ?? '',
-            ];
+            $phoneList = array_keys($allNormalizedNumbers);
+            Log::info("Validating " . count($phoneList) . " phone numbers via Fonnte.");
+            
+            $sentCount = 0;
+            $batchLimit = 20;
 
-            foreach ($placeholders as $placeholder => $value) {
-                $personalizedMessage = str_replace($placeholder, $value, $personalizedMessage);
-            }
+            foreach ($leads as $lead) {
+                // 0. Check for Stop Signal
+                if (\Illuminate\Support\Facades\Cache::has('stop_broadcast_' . $this->userId)) {
+                    Log::info("Broadcast Stopped by User: " . $this->userId);
+                    \Illuminate\Support\Facades\Cache::forget('stop_broadcast_' . $this->userId);
+                    return;
+                }
 
-            // 4. Send to Fonnte
-            try {
-                $sendResponse = Http::withHeaders([
-                    'Authorization' => $this->deviceToken
-                ])->asForm()->post('https://api.fonnte.com/send', [
-                    'target' => $phone,
-                    'message' => $personalizedMessage,
-                    'countryCode' => '0',
-                    'delay' => 3
-                ]);
+                if (!$lead->phone) {
+                    Log::info("Skipping lead: " . ($lead->name ?? 'Unknown') . " - Reason: No phone number.");
+                    continue;
+                }
 
-                $result = $sendResponse->json();
-                if ($result['status'] ?? false) {
-                    $messageId = $result['id'][0] ?? $result['id'] ?? null;
-                    if ($messageId) {
-                        DB::table('message_histories')->insert([
-                            'id' => (string) $messageId,
-                            'user_id' => $this->userId,
-                            'target' => $phone,
-                            'message' => $personalizedMessage,
-                            'status' => $result['process'] ?? 'processing',
-                            'created_at' => now()
-                        ]);
-                        $sentCount++;
+                $phone = $this->normalizePhone($lead->phone);
+                
+                // 1. Random Delay Logic
+                if ($sentCount > 0) {
+                    // Batch rest: after every 20 messages
+                    if ($sentCount % $batchLimit == 0) {
+                        Log::info("Batch limit reached ($sentCount). Resting for 15 minutes to keep account safe...");
+                        // Sleep in 10-second increments to stay responsive to Stop signal
+                        for ($i = 0; $i < 90; $i++) {
+                            sleep(10);
+                            if (\Illuminate\Support\Facades\Cache::has('stop_broadcast_' . $this->userId)) {
+                                Log::info("Broadcast Stopped by User (Detected during 15m rest): " . $this->userId);
+                                \Illuminate\Support\Facades\Cache::forget('stop_broadcast_' . $this->userId);
+                                return;
+                            }
+                        }
+                    } else {
+                        $sleepTime = rand($this->delayMin, $this->delayMax);
+                        Log::info("Sleeping for $sleepTime seconds before sending to $phone...");
+                        sleep($sleepTime);
+                    }
+
+                    // Check Stop Signal AGAIN after sleep
+                    if (\Illuminate\Support\Facades\Cache::has('stop_broadcast_' . $this->userId)) {
+                        Log::info("Broadcast Stopped by User (Detected after sleep): " . $this->userId);
+                        \Illuminate\Support\Facades\Cache::forget('stop_broadcast_' . $this->userId);
+                        return;
                     }
                 }
-            } catch (\Exception $e) {
-                Log::error("Broadcast Send Error for $phone: " . $e->getMessage());
+
+                // 2. Personalize Message
+                $personalizedMessage = $this->messageContent;
+                $placeholders = [
+                    '{{name}}' => $lead->name ?? '',
+                    '{{address}}' => $lead->address ?? '',
+                    '{{phone}}' => $lead->phone ?? '',
+                    '{{category}}' => $lead->category ?? '',
+                ];
+
+                foreach ($placeholders as $placeholder => $value) {
+                    $personalizedMessage = str_replace($placeholder, $value, $personalizedMessage);
+                }
+
+                // 3. Send to Fonnte
+                try {
+                    Log::info("Attempting to send message to: $phone (" . $lead->name . ")");
+                    $sendResponse = Http::withHeaders([
+                        'Authorization' => $this->deviceToken
+                    ])->asForm()->post('https://api.fonnte.com/send', [
+                        'target' => $phone,
+                        'message' => $personalizedMessage,
+                        'countryCode' => '0',
+                        'delay' => 3
+                    ]);
+
+                    $result = $sendResponse->json();
+                    if ($result['status'] ?? false) {
+                        $messageId = $result['id'][0] ?? $result['id'] ?? null;
+                        if ($messageId) {
+                            DB::table('message_histories')->insert([
+                                'id' => (string) $messageId,
+                                'user_id' => $this->userId,
+                                'target' => $phone,
+                                'message' => $personalizedMessage,
+                                'status' => $result['process'] ?? 'processing',
+                                'created_at' => now()
+                            ]);
+                            $sentCount++;
+                            Log::info("Message successfully sent to $phone. Total sent so far: $sentCount");
+                        }
+                    } else {
+                        $reason = $result['reason'] ?? 'Unknown reason';
+                        Log::error("Fonnte Send Failed for $phone: $reason. Continuing to next lead...");
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Critical Error sending to $phone: " . $e->getMessage() . ". Continuing to next lead...");
+                }
             }
+            Log::info("Broadcast completed. Total messages sent: $sentCount");
+        } finally {
+            \Illuminate\Support\Facades\Cache::forget('broadcast_running_' . $this->userId);
         }
     }
 }

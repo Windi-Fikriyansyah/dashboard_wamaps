@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     // WhatsApp Broadcast Routes
     Route::get('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'index'])->name('whatsapp.broadcast');
     Route::post('/whatsapp/broadcast', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'send'])->name('whatsapp.broadcast.send');
+    Route::post('/whatsapp/broadcast/stop', [\App\Http\Controllers\WhatsAppBroadcastController::class, 'stop'])->name('whatsapp.broadcast.stop');
 });
 
 

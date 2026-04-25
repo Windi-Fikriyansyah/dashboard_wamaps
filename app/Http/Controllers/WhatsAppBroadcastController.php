@@ -28,7 +28,9 @@ class WhatsAppBroadcastController extends Controller
             ->where('user_id', Auth::id())
             ->get();
 
-        return view('whatsapp.broadcast', compact('leads', 'templates', 'devices'));
+        $isRunning = \Illuminate\Support\Facades\Cache::has('broadcast_running_' . Auth::id());
+
+        return view('whatsapp.broadcast', compact('leads', 'templates', 'devices', 'isRunning'));
     }
 
     /**
@@ -62,6 +64,9 @@ class WhatsAppBroadcastController extends Controller
             return response()->json(['error' => 'Template tidak ditemukan.'], 404);
         }
 
+        // Clear any existing stop signal before starting
+        \Illuminate\Support\Facades\Cache::forget('stop_broadcast_' . Auth::id());
+
         // Dispatch background job
         BroadcastMessage::dispatch(
             $request->lead_ids,
@@ -77,6 +82,18 @@ class WhatsAppBroadcastController extends Controller
             'targets_count' => count($request->lead_ids),
             'mode' => 'background',
             'batch_info' => '20 pesan per batch, istirahat 15 menit antar batch, jeda acak ' . $request->delay_min . '-' . $request->delay_max . ' detik per pesan.'
+        ]);
+    }
+
+    /**
+     * Stop the active broadcast.
+     */
+    public function stop()
+    {
+        \Illuminate\Support\Facades\Cache::put('stop_broadcast_' . Auth::id(), true, now()->addHours(1));
+
+        return response()->json([
+            'message' => 'Sinyal berhenti dikirim. Pengiriman akan terhenti setelah pesan saat ini selesai diproses.'
         ]);
     }
 }
