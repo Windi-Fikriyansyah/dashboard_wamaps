@@ -61,6 +61,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/software', [\App\Http\Controllers\ExtrasController::class, 'software'])->name('software');
 });
 
+// API for Desktop App Login
+Route::post('/auth/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->name('api.login');
+
 // WhatsApp Webhook (Outside Auth)
 Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppHistoryController::class, 'webhook'])->name('whatsapp.webhook');
 
