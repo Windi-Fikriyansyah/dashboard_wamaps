@@ -30,15 +30,26 @@
                         <div class="mb-4">
                             <h2 class="h1 fw-black tracking-tight text-white mb-2">Wamaps App v1.3.0</h2>
                             <p class="text-white text-opacity-80 fw-medium">
-                                Download dan jalankan ekstrak filenya di Windows Anda. Tidak perlu instalasi rumit.
+                                Pilih platform Anda dan mulai gunakan Wamaps Desktop sekarang. 
+                                Lebih ngebut dan powerful.
                             </p>
                         </div>
-                        <a href="https://www.dropbox.com/scl/fi/d0objgz9trpn5nygvwnwx/Wamaps.zip?rlkey=57a2it0g79gzcnd9d0pe6b0qe&st=t055lzsr&dl=0" 
-                           target="_blank" rel="noopener noreferrer" 
-                           class="btn btn-white text-primary btn-lg px-5 py-3 fw-black rounded-4 shadow-lg hover-scale transition-all d-flex align-items-center gap-3">
-                            <i class="bx bx-download fs-3"></i>
-                            Download Wamaps Desktop
-                        </a>
+                        
+                        <div class="d-flex flex-column flex-md-row gap-3">
+                            <a href="https://github.com/Windi-Fikriyansyah/dekstop_scrape_maps/releases/download/v1.0.0/MapsLeadScraper-Windows.zip" 
+                               target="_blank" rel="noopener noreferrer" 
+                               class="btn btn-white text-primary btn-lg px-4 py-3 fw-black rounded-4 shadow-lg hover-scale transition-all d-flex align-items-center gap-3">
+                                <i class="bx bxl-windows fs-3"></i>
+                                Download Windows
+                            </a>
+                            <a href="https://github.com/Windi-Fikriyansyah/dekstop_scrape_maps/releases/download/v1.0.0/MapsLeadScraper.dmg" 
+                               target="_blank" rel="noopener noreferrer" 
+                               class="btn btn-outline-light btn-lg px-4 py-3 fw-black rounded-4 shadow-lg hover-scale transition-all d-flex align-items-center gap-3 border-2"
+                               style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px);">
+                                <i class="bx bxl-apple fs-3"></i>
+                                Download macOS
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -104,17 +115,54 @@
                 <div class="card border-0 shadow-lg rounded-5 bg-dark text-white overflow-hidden">
                     <div class="card-body p-4 p-md-5">
                         <h4 class="fw-bold text-light mb-4">Step Instalasi</h4>
-                        <div class="d-flex flex-column gap-3">
-                            @foreach([
-                                "Download file .zip dari link di atas",
-                                "Ekstrak file ke folder di PC Anda (Contoh: D:/Wamaps)",
-                                "Buka folder Wamaps dan jalankan MapsLeadScraper.exe"
-                            ] as $step)
-                            <div class="d-flex gap-3 align-items-start">
-                                <i class="bx bx-check-circle text-success fs-4 shrink-0"></i>
-                                <span class="small text-white text-opacity-80">{{ $step }}</span>
+                        
+                        <ul class="nav nav-pills mb-4 gap-2" id="installTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active btn btn-sm rounded-pill px-3 fw-bold text-white border-0" 
+                                        style="background: rgba(255,255,255,0.1);"
+                                        id="win-tab" data-bs-toggle="pill" data-bs-target="#win-steps" type="button">
+                                    <i class="bx bxl-windows me-1"></i> Windows
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn btn-sm rounded-pill px-3 fw-bold text-white border-0" 
+                                        style="background: rgba(255,255,255,0.1);"
+                                        id="mac-tab" data-bs-toggle="pill" data-bs-target="#mac-steps" type="button">
+                                    <i class="bx bxl-apple me-1"></i> macOS
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="installTabContent">
+                            <div class="tab-pane fade show active" id="win-steps" role="tabpanel">
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach([
+                                        "Download file .zip dari link di atas",
+                                        "Ekstrak file ke folder di PC Anda (Contoh: D:/Wamaps)",
+                                        "Buka folder Wamaps dan jalankan MapsLeadScraper.exe"
+                                    ] as $step)
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <i class="bx bx-check-circle text-success fs-4 shrink-0"></i>
+                                        <span class="small text-white text-opacity-80">{{ $step }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
                             </div>
-                            @endforeach
+                            <div class="tab-pane fade" id="mac-steps" role="tabpanel">
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach([
+                                        "Download file .dmg dari link di atas",
+                                        "Buka file .dmg dan drag Wamaps ke Applications",
+                                        "Klik kanan aplikasi dan pilih 'Open' untuk pertama kali",
+                                        "Jika muncul peringatan, pilih 'Open Anyway' di Privacy Settings"
+                                    ] as $step)
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <i class="bx bx-check-circle text-info fs-4 shrink-0"></i>
+                                        <span class="small text-white text-opacity-80">{{ $step }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -131,5 +179,15 @@
     .btn-white:hover { background-color: #f8f9fa; border-color: #f8f9fa; }
     .hover-scale:hover { transform: translateY(-5px); }
     .backdrop-blur { backdrop-filter: blur(8px); }
+    
+    /* Tabs styling */
+    .nav-pills .nav-link.active {
+        background: #696cff !important;
+        box-shadow: 0 4px 15px rgba(105, 108, 255, 0.4);
+    }
+    .nav-pills .nav-link:not(.active):hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+    }
+    .transition-all { transition: all 0.3s ease; }
 </style>
 @endsection
