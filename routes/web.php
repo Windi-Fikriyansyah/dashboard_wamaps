@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
     Route::post('/leads/search', [LeadController::class, 'search'])->name('leads.search');
     Route::get('/leads/data', [LeadController::class, 'data'])->name('leads.data');
+    Route::get('/leads/export', [LeadController::class, 'export'])->name('leads.export');
     Route::post('/leads/save', [LeadController::class, 'save'])->name('leads.save');
     Route::post('/leads/save-batch', [LeadController::class, 'saveBatch'])->name('leads.save-batch');
     Route::delete('/leads/{id}', [LeadController::class, 'destroy'])->name('leads.destroy');

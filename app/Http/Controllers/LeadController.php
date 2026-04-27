@@ -399,4 +399,25 @@ class LeadController extends Controller
 
         return response()->json(['success' => true, 'message' => "$deleted leads deleted successfully"]);
     }
+
+    /**
+     * Get all leads for export.
+     */
+    public function export()
+    {
+        $query = DB::table('leads')
+            ->join('user_saved_leads', 'leads.id', '=', 'user_saved_leads.lead_id')
+            ->where('user_saved_leads.user_id', Auth::id())
+            ->select('leads.*', 'user_saved_leads.category as category');
+
+        try {
+            // Try to sort by timestamp if it exists
+            $leads = $query->orderBy('user_saved_leads.timestamp', 'desc')->get();
+        } catch (\Exception $e) {
+            // Fallback to ID if timestamp column doesn't exist
+            $leads = $query->orderBy('leads.id', 'desc')->get();
+        }
+
+        return response()->json($leads);
+    }
 }

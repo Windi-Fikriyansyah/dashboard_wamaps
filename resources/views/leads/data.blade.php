@@ -133,12 +133,12 @@
                     }
                 },
                 "columns": [
-                    { "data": "checkbox", "name": "checkbox", "orderable": false, "searchable": false },
-                    { "data": "name_html", "name": "name" },
-                    { "data": "address_html", "name": "address" },
-                    { "data": "contact_html", "name": "phone", "orderable": false, "searchable": false },
-                    { "data": "rating_html", "name": "rating" },
-                    { "data": "category_html", "name": "category" },
+                    { "data": "checkbox", "name": "user_saved_leads.id", "orderable": false, "searchable": false },
+                    { "data": "name_html", "name": "leads.name" },
+                    { "data": "address_html", "name": "leads.address" },
+                    { "data": "contact_html", "name": "leads.phone", "orderable": false, "searchable": false },
+                    { "data": "rating_html", "name": "leads.rating" },
+                    { "data": "category_html", "name": "user_saved_leads.category" },
                     { "data": "action", "name": "action", "orderable": false, "searchable": false, "className": "text-end" }
                 ],
                 "drawCallback": function(settings) {
@@ -231,65 +231,85 @@
         }
 
         /**
-         * Export current page leads to Excel
+         * Export all leads to Excel
          */
-        function exportToExcel() {
-            const data = leadsTable.rows({page:'current'}).data().toArray();
-            if (data.length === 0) return;
+        async function exportToExcel() {
+            try {
+                const response = await fetch("{{ route('leads.export') }}");
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    Swal.fire('Info', 'Tidak ada data untuk diekspor', 'info');
+                    return;
+                }
 
-            const worksheetData = data.map(lead => ({
-                'Nama Bisnis': lead.name,
-                'Alamat': lead.address,
-                'Telepon': lead.phone || '-',
-                'Website': lead.website || '-',
-                'Rating': lead.rating || '0',
-                'Kategori': lead.category || 'N/A',
-                'Google Maps Link': `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || ''))}`
-            }));
+                const worksheetData = data.map(lead => ({
+                    'Nama Bisnis': lead.name,
+                    'Alamat': lead.address,
+                    'Telepon': lead.phone || '-',
+                    'Website': lead.website || '-',
+                    'Rating': lead.rating || '0',
+                    'Kategori': lead.category || 'N/A',
+                    'Google Maps Link': `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || ''))}`
+                }));
 
-            const ws = XLSX.utils.json_to_sheet(worksheetData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Leads");
+                const ws = XLSX.utils.json_to_sheet(worksheetData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Leads");
 
-            const filename = `database_leads_export_${new Date().getTime()}.xlsx`;
-            XLSX.writeFile(wb, filename);
+                const filename = `database_leads_export_${new Date().getTime()}.xlsx`;
+                XLSX.writeFile(wb, filename);
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Gagal mengambil data untuk ekspor', 'error');
+            }
         }
 
         /**
-         * Export current page leads to CSV
+         * Export all leads to CSV
          */
-        function exportToCSV() {
-            const data = leadsTable.rows({page:'current'}).data().toArray();
-            if (data.length === 0) return;
+        async function exportToCSV() {
+            try {
+                const response = await fetch("{{ route('leads.export') }}");
+                const data = await response.json();
 
-            const headers = ['Nama Bisnis', 'Alamat', 'Telepon', 'Website', 'Rating', 'Kategori', 'Google Maps Link'];
-            const csvRows = [headers.join(',')];
+                if (data.length === 0) {
+                    Swal.fire('Info', 'Tidak ada data untuk diekspor', 'info');
+                    return;
+                }
 
-            data.forEach(lead => {
-                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || ''))}`;
-                const row = [
-                    `"${(lead.name || '').replace(/"/g, '""')}"`,
-                    `"${(lead.address || '').replace(/"/g, '""')}"`,
-                    `"${(lead.phone || '').replace(/"/g, '""')}"`,
-                    `"${(lead.website || '').replace(/"/g, '""')}"`,
-                    lead.rating || '0',
-                    `"${(lead.category || '').replace(/"/g, '""')}"`,
-                    `"${mapsLink}"`
-                ];
-                csvRows.push(row.join(','));
-            });
+                const headers = ['Nama Bisnis', 'Alamat', 'Telepon', 'Website', 'Rating', 'Kategori', 'Google Maps Link'];
+                const csvRows = [headers.join(',')];
 
-            const csvString = csvRows.join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
+                data.forEach(lead => {
+                    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.name + ' ' + (lead.address || ''))}`;
+                    const row = [
+                        `"${(lead.name || '').replace(/"/g, '""')}"`,
+                        `"${(lead.address || '').replace(/"/g, '""')}"`,
+                        `"${(lead.phone || '').replace(/"/g, '""')}"`,
+                        `"${(lead.website || '').replace(/"/g, '""')}"`,
+                        lead.rating || '0',
+                        `"${(lead.category || '').replace(/"/g, '""')}"`,
+                        `"${mapsLink}"`
+                    ];
+                    csvRows.push(row.join(','));
+                });
 
-            link.setAttribute("href", url);
-            link.setAttribute("download", `database_leads_export_${new Date().getTime()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                const csvString = csvRows.join('\n');
+                const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+
+                link.setAttribute("href", url);
+                link.setAttribute("download", `database_leads_export_${new Date().getTime()}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Gagal mengambil data untuk ekspor', 'error');
+            }
         }
 
         /**
