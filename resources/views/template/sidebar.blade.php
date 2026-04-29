@@ -87,6 +87,17 @@
     </li>
 
     <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Kemitraan</span>
+    </li>
+
+    <li class="menu-item {{ request()->routeIs('affiliate') ? 'active' : '' }}">
+        <a href="{{ route('affiliate') }}" class="menu-link">
+            <i class="menu-icon tf-icons bx bx-group"></i>
+            <div data-i18n="Afiliasi">Afiliasi</div>
+        </a>
+    </li>
+
+    <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Pengaturan</span>
     </li>
 

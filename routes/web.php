@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/bonus', [\App\Http\Controllers\ExtrasController::class, 'bonus'])->name('bonus');
     Route::get('/extension', [\App\Http\Controllers\ExtrasController::class, 'extension'])->name('extension');
     Route::get('/software', [\App\Http\Controllers\ExtrasController::class, 'software'])->name('software');
+    Route::get('/affiliate', [\App\Http\Controllers\ExtrasController::class, 'affiliate'])->name('affiliate');
 });
 
 // API for Desktop App Login

@@ -20,4 +20,9 @@ class ExtrasController extends Controller
     {
         return view('extras.software');
     }
+
+    public function affiliate()
+    {
+        return view('extras.affiliate');
+    }
 }
