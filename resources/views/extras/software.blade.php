@@ -43,12 +43,12 @@
                             </div>
 
                             <div class="d-flex flex-column flex-md-row gap-3">
-                                <a href="https://tinyurl.com/243xnncc" target="_blank" rel="noopener noreferrer"
+                                <a href="https://github.com/Windi-Fikriyansyah/dekstop_scrape_maps/releases/download/v4.2.0/MapsLeadScraper-Windows.zip" target="_blank" rel="noopener noreferrer"
                                     class="btn btn-white text-primary btn-lg px-4 py-3 fw-black rounded-4 shadow-lg hover-scale transition-all d-flex align-items-center gap-3">
                                     <i class="bx bxl-windows fs-3"></i>
                                     Download Windows
                                 </a>
-                                <a href="https://tinyurl.com/2wec298k" target="_blank" rel="noopener noreferrer"
+                                <a href="https://github.com/Windi-Fikriyansyah/dekstop_scrape_maps/releases/download/v4.2.0/MapsLeadScraper.dmg" target="_blank" rel="noopener noreferrer"
                                     class="btn btn-outline-light btn-lg px-4 py-3 fw-black rounded-4 shadow-lg hover-scale transition-all d-flex align-items-center gap-3 border-2"
                                     style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px);">
                                     <i class="bx bxl-apple fs-3"></i>
